@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 Romantic Photo Booth - Create Beautiful Memories</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff6b9d, #ff8fab, #ffa8cc);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b9d, #ff8fab);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .instructions {
+            background: #27ae60;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .error-help {
+            display: none;
+            background: #e74c3c;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .error-help h4 {
+            margin-bottom: 10px;
+        }
+
+        .error-help ul {
+            text-align: left;
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .error-help li {
+            margin: 5px 0;
+        }
+
+        .camera-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .camera-container {
+            position: relative;
+            display: inline-block;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: #000;
+        }
+
+        #video, #canvas {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            display: block;
+        }
+
+        #video.mirror {
+            transform: scaleX(-1);
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .frame-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b9d, #ff8fab);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 107, 157, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(155, 89, 182, 0.6);
+        }
+
+        .frames-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .frame-option {
+            width: 100px;
+            height: 100px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .frame-option:hover {
+            transform: scale(1.05);
+            border-color: #ff6b9d;
+            box-shadow: 0 5px 15px rgba(255, 107, 157, 0.4);
+        }
+
+        .frame-option.selected {
+            border-color: #ff6b9d;
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.6);
+        }
+
+        .filters-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .filters-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .filter-option {
+            padding: 10px 15px;
+            background: linear-gradient(45deg, #ffeaa7, #fdcb6e);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #2d3436;
+            transition: all 0.3s ease;
+        }
+
+        .filter-option:hover, .filter-option.selected {
+            background: linear-gradient(45deg, #fdcb6e, #e17055);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .photo-result {
+            text-align: center;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .photo-result img {
+            max-width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #2d3436;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .message-popup {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 10000;
+            animation: slideDown 0.3s ease;
+        }
+
+        .message-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .message-error {
+            background: #e74c3c;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .frames-gallery {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(0); opacity: 1; }
+            to { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💕 Romantic Photo Booth</h1>
+            <p>Create beautiful memories with stunning frames and filters!</p>
+        </div>
+
+        <div class="main-content">
+            <div class="instructions" id="mainInstructions">
+                <strong>📸 How to use:</strong> Click "Start Camera" → Click "Allow" when browser asks → Choose frame → Take photo!
+            </div>
+
+            <div class="error-help" id="errorHelp">
+                <h4>📷 Camera Access Needed!</h4>
+                <p><strong>Your browser blocked camera access.</strong> To use the photo booth:</p>
+                <ul>
+                    <li>🔒 Look for camera icon in address bar and click it</li>
+                    <li>📱 Select "Allow" for camera permission</li>
+                    <li>🔄 Refresh this page and try again</li>
+                    <li>💻 Or try Chrome browser (recommended)</li>
+                </ul>
+                <button class="btn" onclick="location.reload()">🔄 Refresh & Try Again</button>
+            </div>
+
+            <div class="camera-section">
+                <div class="camera-container">
+                    <video id="video" autoplay muted playsinline></video>
+                    <canvas id="canvas"></canvas>
+                    <div class="frame-overlay" id="frameOverlay"></div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" id="startBtn">📹 Start Camera</button>
+                    <button class="btn" id="captureBtn" style="display: none;">📸 Capture Photo</button>
+                    <button class="btn btn-secondary" id="switchBtn" style="display: none;">🔄 Switch Camera</button>
+                </div>
+            </div>
+
+            <div class="frames-section">
+                <h3 class="section-title">💖 Choose Your Aesthetic Frame</h3>
+                <div class="frames-gallery">
+                    <div class="frame-option selected" data-frame="none" style="background: linear-gradient(45deg, #ff9a9e, #fecfef);">
+                        <div style="text-align: center; line-height: 94px; font-weight: bold; color: white; font-size: 12px;">None</div>
+                    </div>
+                    <div class="frame-option" data-frame="hearts" style="background: linear-gradient(45deg, #ffecd2, #fcb69f);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px;">💕</div>
+                    </div>
+                    <div class="frame-option" data-frame="roses" style="background: linear-gradient(45deg, #ff9a9e, #f093fb);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px;">🌹</div>
+                    </div>
+                    <div class="frame-option" data-frame="butterfly" style="background: linear-gradient(45deg, #a8edea, #fed6e3);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px;">🦋</div>
+                    </div>
+                    <div class="frame-option" data-frame="stars" style="background: linear-gradient(45deg, #d299c2, #fef9d7);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px;">⭐</div>
+                    </div>
+                    <div class="frame-option" data-frame="vintage" style="background: linear-gradient(45deg, #ffeaa7, #fab1a0);">
+                        <div style="text-align: center; line-height: 94px; font-size: 16px;">📷</div>
+                    </div>
+                    <div class="frame-option" data-frame="elegant" style="background: linear-gradient(45deg, #fd79a8, #fdcb6e);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px;">✨</div>
+                    </div>
+                    <div class="frame-option" data-frame="kawaii" style="background: linear-gradient(45deg, #ffeaa7, #fab1a0);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px;">🌸</div>
+                    </div>
+                    <div class="frame-option" data-frame="moon" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px; color: white;">🌙</div>
+                    </div>
+                    <div class="frame-option" data-frame="rainbow" style="background: linear-gradient(45deg, #fa709a, #fee140, #fa709a);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px;">🌈</div>
+                    </div>
+                    <div class="frame-option" data-frame="crystal" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px; color: white;">💎</div>
+                    </div>
+                    <div class="frame-option" data-frame="aesthetic" style="background: linear-gradient(45deg, #ff9a9e, #fad0c4, #a8edea);">
+                        <div style="text-align: center; line-height: 94px; font-size: 20px;">🎀</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <h3 class="section-title">🎨 Apply Beautiful Filters</h3>
+                <div class="filters-gallery">
+                    <button class="filter-option selected" data-filter="none">Original</button>
+                    <button class="filter-option" data-filter="warm">☀️ Warm</button>
+                    <button class="filter-option" data-filter="cool">❄️ Cool</button>
+                    <button class="filter-option" data-filter="dreamy">💭 Dreamy</button>
+                    <button class="filter-option" data-filter="vintage">📸 Vintage</button>
+                    <button class="filter-option" data-filter="soft">🌸 Soft</button>
+                    <button class="filter-option" data-filter="golden">✨ Golden</button>
+                    <button class="filter-option" data-filter="pink">💕 Pink</button>
+                    <button class="filter-option" data-filter="blue">🌊 Blue</button>
+                    <button class="filter-option" data-filter="dramatic">🔥 Dramatic</button>
+                    <button class="filter-option" data-filter="pastel">🎀 Pastel</button>
+                    <button class="filter-option" data-filter="neon">💫 Neon</button>
+                </div>
+            </div>
+
+            <div class="photo-result" id="photoResult">
+                <h3 class="section-title">📸 Your Beautiful Photo</h3>
+                <img id="capturedPhoto" alt="Your captured photo">
+                <div style="margin-top: 20px;">
+                    <button class="btn" id="downloadBtn">💾 Download Photo</button>
+                    <button class="btn btn-secondary" id="retakeBtn">🔄 Take Another</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let video, canvas, ctx, currentStream, facingMode = 'user';
+        let selectedFrame = 'none';
+        let selectedFilter = 'none';
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('startBtn').addEventListener('click', startCamera);
+            document.getElementById('captureBtn').addEventListener('click', capturePhoto);
+            document.getElementById('switchBtn').addEventListener('click', switchCamera);
+            document.getElementById('downloadBtn').addEventListener('click', downloadPhoto);
+            document.getElementById('retakeBtn').addEventListener('click', retakePhoto);
+
+            // Frame selection
+            document.querySelectorAll('.frame-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.frame-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedFrame = this.dataset.frame;
+                    updateFrameOverlay();
+                });
+            });
+
+            // Filter selection
+            document.querySelectorAll('.filter-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedFilter = this.dataset.filter;
+                    applyFilter();
+                });
+            });
+        }
+
+        async function startCamera() {
+            const startBtn = document.getElementById('startBtn');
+            startBtn.textContent = '⏳ Starting Camera...';
+            startBtn.disabled = true;
+
+            try {
+                const constraints = {
+                    video: { 
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+                
+                video.onloadedmetadata = function() {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    updateFrameOverlay();
+                    
+                    // Mirror effect for front camera
+                    if (facingMode === 'user') {
+                        video.classList.add('mirror');
+                    } else {
+                        video.classList.remove('mirror');
+                    }
+                };
+
+                // Success!
+                document.getElementById('errorHelp').style.display = 'none';
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('captureBtn').style.display = 'inline-block';
+                document.getElementById('switchBtn').style.display = 'inline-block';
+
+                showMessage('✅ Camera ready! Choose a frame and take your photo!', 'success');
+
+            } catch (err) {
+                console.error('Camera error:', err);
+                
+                // Reset button
+                startBtn.textContent = '📹 Try Again';
+                startBtn.disabled = false;
+                
+                // Show error help
+                document.getElementById('errorHelp').style.display = 'block';
+                
+                // Show specific error message
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    showMessage('🚫 Camera permission denied. Please allow camera access!', 'error');
+                } else if (err.name === 'NotFoundError') {
+                    showMessage('📷 No camera found. Please check your device!', 'error');
+                } else {
+                    showMessage('❌ Camera error. Please try refreshing the page!', 'error');
+                }
+            }
+        }
+
+        function switchCamera() {
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+            startCamera();
+        }
+
+        function updateFrameOverlay() {
+            const overlay = document.getElementById('frameOverlay');
+            overlay.innerHTML = '';
+            overlay.style.border = '';
+            overlay.style.background = '';
+            
+            if (selectedFrame === 'hearts') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 10px; left: 10px; font-size: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">💕</div>
+                    <div style="position: absolute; top: 10px; right: 10px; font-size: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">💕</div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; font-size: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">💕</div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; font-size: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">💕</div>
+                `;
+            } else if (selectedFrame === 'roses') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 5px; left: 50%; transform: translateX(-50%); font-size: 35px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌹</div>
+                    <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 35px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌹</div>
+                    <div style="position: absolute; top: 50%; left: 5px; transform: translateY(-50%); font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌹</div>
+                    <div style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%); font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌹</div>
+                `;
+            } else if (selectedFrame === 'butterfly') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 15px; left: 15px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🦋</div>
+                    <div style="position: absolute; top: 15px; right: 15px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🦋</div>
+                    <div style="position: absolute; bottom: 15px; left: 15px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🦋</div>
+                    <div style="position: absolute; bottom: 15px; right: 15px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🦋</div>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; opacity: 0.7; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌸</div>
+                `;
+            } else if (selectedFrame === 'stars') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 20px; left: 20px; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">⭐</div>
+                    <div style="position: absolute; top: 60px; right: 30px; font-size: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                    <div style="position: absolute; top: 30px; right: 60px; font-size: 18px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">⭐</div>
+                    <div style="position: absolute; bottom: 20px; left: 40px; font-size: 16px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                    <div style="position: absolute; bottom: 50px; right: 20px; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">⭐</div>
+                    <div style="position: absolute; bottom: 80px; left: 25px; font-size: 14px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                `;
+            } else if (selectedFrame === 'kawaii') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font-size: 40px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌸</div>
+                    <div style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 40px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌸</div>
+                    <div style="position: absolute; top: 25%; left: 15px; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌸</div>
+                    <div style="position: absolute; top: 25%; right: 15px; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌸</div>
+                    <div style="position: absolute; bottom: 25%; left: 15px; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌸</div>
+                    <div style="position: absolute; bottom: 25%; right: 15px; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌸</div>
+                `;
+            } else if (selectedFrame === 'moon') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 15px; right: 15px; font-size: 35px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌙</div>
+                    <div style="position: absolute; bottom: 15px; left: 15px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">⭐</div>
+                    <div style="position: absolute; top: 30%; left: 20px; font-size: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                    <div style="position: absolute; bottom: 30%; right: 20px; font-size: 18px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">⭐</div>
+                `;
+            } else if (selectedFrame === 'rainbow') {
+                overlay.style.background = `
+                    linear-gradient(to right, transparent 0%, transparent 10%, 
+                    rgba(255,0,0,0.3) 15%, rgba(255,165,0,0.3) 25%, rgba(255,255,0,0.3) 35%, 
+                    rgba(0,255,0,0.3) 45%, rgba(0,0,255,0.3) 55%, rgba(75,0,130,0.3) 65%, 
+                    rgba(238,130,238,0.3) 75%, transparent 85%, transparent 100%)
+                `;
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 10px; left: 10px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌈</div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🌈</div>
+                `;
+            } else if (selectedFrame === 'crystal') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 10px; left: 10px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">💎</div>
+                    <div style="position: absolute; top: 10px; right: 10px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">💎</div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">💎</div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; font-size: 25px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">💎</div>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 15px; opacity: 0.6; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                `;
+            } else if (selectedFrame === 'aesthetic') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px; border: 3px solid rgba(255,182,193,0.8); border-radius: 15px;"></div>
+                    <div style="position: absolute; top: 10px; left: 10px; font-size: 20px; color: #FFB6C1; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🎀</div>
+                    <div style="position: absolute; top: 10px; right: 10px; font-size: 20px; color: #FFB6C1; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🎀</div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; font-size: 20px; color: #FFB6C1; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🎀</div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; font-size: 20px; color: #FFB6C1; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🎀</div>
+                `;
+            } else if (selectedFrame === 'vintage') {
+                overlay.style.border = '8px solid #8B4513';
+                overlay.style.boxSizing = 'border-box';
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 15px; left: 15px; width: 30px; height: 30px; border: 2px solid #8B4513; border-radius: 50%; opacity: 0.7;"></div>
+                    <div style="position: absolute; top: 15px; right: 15px; width: 30px; height: 30px; border: 2px solid #8B4513; border-radius: 50%; opacity: 0.7;"></div>
+                `;
+            } else if (selectedFrame === 'elegant') {
+                overlay.innerHTML = `
+                    <div style="position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px; border: 3px solid gold; border-radius: 10px;"></div>
+                    <div style="position: absolute; top: 15px; left: 15px; font-size: 25px; color: gold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                    <div style="position: absolute; top: 15px; right: 15px; font-size: 25px; color: gold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                    <div style="position: absolute; bottom: 15px; left: 15px; font-size: 25px; color: gold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                    <div style="position: absolute; bottom: 15px; right: 15px; font-size: 25px; color: gold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">✨</div>
+                `;
+            }
+        }
+
+        function applyFilter() {
+            if (!video.videoWidth) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            
+            // Apply filters
+            if (selectedFilter === 'warm') {
+                ctx.filter = 'sepia(0.3) saturate(1.4) brightness(1.1)';
+            } else if (selectedFilter === 'dreamy') {
+                ctx.filter = 'blur(0.5px) brightness(1.2) contrast(0.8)';
+            } else if (selectedFilter === 'vintage') {
+                ctx.filter = 'sepia(0.8) contrast(1.2) brightness(0.9)';
+            } else if (selectedFilter === 'soft') {
+                ctx.filter = 'contrast(0.8) brightness(1.1) blur(0.3px)';
+            } else if (selectedFilter === 'golden') {
+                ctx.filter = 'sepia(0.4) saturate(1.6) hue-rotate(-10deg)';
+            } else {
+                ctx.filter = 'none';
+            }
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+
+        function capturePhoto() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            ctx.save();
+            
+            // Mirror the canvas if using front camera
+            if (facingMode === 'user') {
+                ctx.scale(-1, 1);
+                ctx.translate(-canvas.width, 0);
+            }
+            
+            // Apply current filter
+            if (selectedFilter === 'warm') {
+                ctx.filter = 'sepia(0.3) saturate(1.4) brightness(1.15) contrast(1.1)';
+            } else if (selectedFilter === 'cool') {
+                ctx.filter = 'hue-rotate(180deg) saturate(1.2) brightness(1.1) contrast(1.05)';
+            } else if (selectedFilter === 'dreamy') {
+                ctx.filter = 'blur(0.8px) brightness(1.3) contrast(0.9) saturate(1.2)';
+            } else if (selectedFilter === 'vintage') {
+                ctx.filter = 'sepia(0.8) contrast(1.3) brightness(0.9) saturate(1.4)';
+            } else if (selectedFilter === 'soft') {
+                ctx.filter = 'contrast(0.85) brightness(1.15) blur(0.4px) saturate(0.9)';
+            } else if (selectedFilter === 'golden') {
+                ctx.filter = 'sepia(0.5) saturate(1.8) hue-rotate(-5deg) brightness(1.2) contrast(1.15)';
+            } else if (selectedFilter === 'pink') {
+                ctx.filter = 'sepia(0.4) saturate(1.5) hue-rotate(-20deg) brightness(1.1) contrast(1.1)';
+            } else if (selectedFilter === 'blue') {
+                ctx.filter = 'sepia(0.3) saturate(1.3) hue-rotate(180deg) brightness(1.05) contrast(1.1)';
+            } else if (selectedFilter === 'dramatic') {
+                ctx.filter = 'contrast(1.4) brightness(0.9) saturate(1.6) sepia(0.1)';
+            } else if (selectedFilter === 'pastel') {
+                ctx.filter = 'saturate(0.7) brightness(1.2) contrast(0.9) blur(0.2px)';
+            } else if (selectedFilter === 'neon') {
+                ctx.filter = 'saturate(2) brightness(1.3) contrast(1.2) hue-rotate(10deg)';
+            } else {
+                ctx.filter = 'none';
+            }
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            
+            // Add frame effects to canvas (after restoring transform)
+            if (selectedFrame === 'hearts') {
+                ctx.font = '60px Arial';
+                ctx.fillText('💕', 20, 60);
+                ctx.fillText('💕', canvas.width - 80, 60);
+                ctx.fillText('💕', 20, canvas.height - 20);
+                ctx.fillText('💕', canvas.width - 80, canvas.height - 20);
+            } else if (selectedFrame === 'roses') {
+                ctx.font = '80px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('🌹', canvas.width / 2, 80);
+                ctx.fillText('🌹', canvas.width / 2, canvas.height - 20);
+                ctx.textAlign = 'left'; // Reset alignment
+            } else if (selectedFrame === 'vintage') {
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 16;
+                ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+            } else if (selectedFrame === 'elegant') {
+                // Gold border
+                ctx.strokeStyle = 'gold';
+                ctx.lineWidth = 6;
+                ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+                
+                // Corner decorations
+                ctx.font = '50px Arial';
+                ctx.fillStyle = 'gold';
+                ctx.fillText('✨', 30, 60);
+                ctx.fillText('✨', canvas.width - 80, 60);
+            }
+            
+            // Show the result
+            const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+            document.getElementById('capturedPhoto').src = dataURL;
+            document.getElementById('photoResult').style.display = 'block';
+            
+            // Hide camera controls
+            document.querySelector('.camera-section').style.display = 'none';
+            
+            showMessage('📸 Photo captured! Download or take another one!', 'success');
+        }
+
+        function downloadPhoto() {
+            const link = document.createElement('a');
+            link.download = `romantic-photo-${Date.now()}.jpg`;
+            link.href = document.getElementById('capturedPhoto').src;
+            link.click();
+            showMessage('💾 Photo downloaded successfully!', 'success');
+        }
+
+        function retakePhoto() {
+            document.getElementById('photoResult').style.display = 'none';
+            document.querySelector('.camera-section').style.display = 'block';
+        }
+
+        function showMessage(message, type) {
+            // Remove existing messages
+            const existingMsg = document.querySelector('.message-popup');
+            if (existingMsg) existingMsg.remove();
+
+            // Create new message
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message-popup message-${type}`;
+            msgDiv.textContent = message;
+            
+            document.body.appendChild(msgDiv);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                if (msgDiv.parentNode) {
+                    msgDiv.style.animation = 'slideUp 0.3s ease';
+                    setTimeout(() => msgDiv.remove(), 300);
+                }
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
